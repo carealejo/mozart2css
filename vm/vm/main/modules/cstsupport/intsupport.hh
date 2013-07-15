@@ -174,7 +174,7 @@ static Gecode::IntRelType atomToRelType(VM vm, In r) {
       }
       return v;
     }
-  } 
+  }
 
   static bool isIntArgs(VM vm, In x){
     bool v=true;
@@ -224,6 +224,51 @@ static Gecode::IntRelType atomToRelType(VM vm, In r) {
     }
     return v;
   }
+
+  static std::vector< Gecode::IntVar > getIntVarVector(VM vm, In x){
+    size_t width;
+
+    if(x.is<Tuple>()){
+      width = x.as<Tuple>().getWidth();
+      std::vector< Gecode::IntVar > v;
+      for(unsigned int i=0; i<width; i++){
+	StableNode* t=x.as<Tuple>().getElement(i);
+	UnstableNode a = Reference::build(vm, t);
+	RichNode tt = a;
+	v.push_back(IntVarLike(tt).intVar(vm));
+      }
+      return v;
+    }else if(x.is<Cons>()){
+      std::vector< Gecode::IntVar > v;
+      StableNode* head=x.as<Cons>().getHead();
+      StableNode* tail=x.as<Cons>().getTail();
+      while (true){
+	UnstableNode uhead = Reference::build(vm, head);
+	RichNode rhead = uhead;
+	v.push_back(IntVarLike(rhead).intVar(vm));
+	UnstableNode utail = Reference::build(vm, tail);
+	RichNode rtail = utail;
+	if (!rtail.is<Cons>()){
+	  break;
+	}
+	UnstableNode ncons = Reference::build(vm, tail);
+	RichNode rncons = ncons;
+	head=rncons.as<Cons>().getHead();
+	tail=rncons.as<Cons>().getTail();	
+      }
+      return v;
+    }else {
+      width = x.as<Record>().getWidth();
+      std::vector< Gecode::IntVar > v;
+      for(unsigned int i=0; i<width; i++){
+	StableNode* t=x.as<Record>().getElement(i);
+	UnstableNode a = Reference::build(vm, t);
+	RichNode tt = a;
+	v.push_back(IntVarLike(tt).intVar(vm));
+      }
+      return v;
+    }
+  } 
 
   static Gecode::IntArgs getIntArgs(VM vm, In x){
     

@@ -3,7 +3,12 @@
 
 #include "../mozartcore.hh"
 #include <gecode/int.hh>
+#include <gecode/int/branch.hh>
 #include "cstsupport/intsupport.hh"
+
+using namespace Gecode::Int;
+using namespace Gecode::Int::Branch;
+
 namespace mozart {
 
   namespace builtins {
@@ -445,12 +450,35 @@ namespace mozart {
       class Distribute: public Builtin<Distribute> {
       public:
 	Distribute(): Builtin("distribute") {}
-	static void call(VM vm, In variable, In value) {
+	static void call(VM vm, In selVariable, In selValue, In selVector) {
 	  assert(vm->getCurrentSpace()->hasConstraintSpace());
 	  Space* space = vm->getCurrentSpace();
-	  nativeint alternatives = value.as<SmallInt>().value();
-	  Distributor_fd<int,int> *distri = new (vm) Distributor_fd<int,int>(vm, space, alternatives);
-	  space->setDistributor(distri);
+	  nativeint _svar=selVariable.as<SmallInt>().value();
+	  nativeint _sval=selValue.as<SmallInt>().value();
+	  switch(_svar*6+_sval)
+	    {
+	    case 0:
+	      {
+	      Distributor_fd< ByMaxMax, ValMin < IntView > > *distri = 
+		new (vm) Distributor_fd< ByMaxMax, ValMin< IntView > >(vm, space, getIntVarVector(vm,selVector));
+	      space->setDistributor(distri);
+	      std::cout << "Distributor ByMaxMax - ValMin" << std::endl;
+	      break;
+	      }
+	    case 1:
+	      {
+	      Distributor_fd< ByMaxMax, ValMed < IntView > > *distri = 
+		new (vm) Distributor_fd< ByMaxMax, ValMed< IntView > >(vm, space, getIntVarVector(vm,selVector));
+	      space->setDistributor(distri);
+	      std::cout << "Distributor ByMaxMax - ValMed" << std::endl;
+	      break;
+	      }
+	    default:
+	      {
+	      raiseTypeError(vm, ("Unknown distribution strategy"), _svar);
+	      break;
+	      }
+	    }
 	}
       };
       

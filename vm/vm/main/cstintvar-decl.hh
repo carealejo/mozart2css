@@ -99,18 +99,21 @@ private:
   template <class Strategy, class Value>
   class Distributor_fd: public Distributor {
   public:
-    Distributor_fd(VM vm, Space* space, nativeint alternatives) {
-      std::cout << "construct distributor_fd" << std::endl;
-      _alternatives = alternatives;
+    Distributor_fd(VM vm, Space* space, std::vector< Gecode::IntVar > v) {
+      _vector = v;
+      for(unsigned int i=0;i<_vector.size();i++){
+	Gecode::IntVar var=_vector[i];
+	unsigned int n=var.size();
+	std::cout << var << "dominio " << n << std::endl;
+	//if(n==1){
+	//_vector.erase[i];
+	//}
+      }
       _var = OptVar::build(vm, space);
     }
 
-    Distributor_fd(VM vm, Space *space, Gecode::IntVarArgs v) {
-      std::cout << "construct distributor_fd with IntVars" << std::endl;
-    }
-    
     Distributor_fd(GR gr, Distributor_fd& from) {
-      _alternatives = from._alternatives;
+      //_alternatives = from._alternatives;
       gr->copyUnstableNode(_var, from._var);
     }
     
@@ -141,6 +144,7 @@ private:
     Strategy _s;
     Value _v;
     nativeint _alternatives;
+    std::vector< Gecode::IntVar > _vector;
     UnstableNode _var;
   };
   
